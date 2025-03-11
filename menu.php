@@ -7,4 +7,4 @@
 	<?php if(User::current() && User::current()->has_right('CanAccessAdminPanel')) {?>
 	<a href="/adminpage.php"><p>АДМИН</p></a>
 	<?php }?>
-</div>
+</div>  
