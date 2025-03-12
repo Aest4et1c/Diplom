@@ -1,6 +1,6 @@
 <?php
 	require_once('db.php');
-	class Role
+	/*class Role
 	{
 		public static function id_to_name(int $id)
 		{
@@ -33,8 +33,44 @@
 				}
 			}
 		}
-	}
-	class User implements IDBEntity
+	}*/
+
+	class Role
+{
+    public static function id_to_name(int $id)
+    {
+        $response = DbConection::instance()->query("SELECT `Name` FROM `Roles` WHERE `ID`={$id}");
+        if ($response !== false && $row = $response->fetch_assoc())
+        {
+            return $row['Name'];
+        }
+        return '';
+    }
+
+    public static function name_to_id(string $name)
+    {
+        $response = DbConection::instance()->query("SELECT `ID` FROM `Roles` WHERE `Name`='{$name}'");
+        if ($response !== false && $row = $response->fetch_assoc())
+        {
+            return intval($row['ID']);
+        }
+        return -1;
+    }
+
+    public static function list()
+    {
+        $response = DbConection::instance()->query('SELECT * FROM `Roles` WHERE 1');
+        if ($response !== false)
+        {
+            while ($row = $response->fetch_assoc())
+            {
+                yield $row['Name'] => $row['ID'];
+            }
+        }
+    }
+}
+
+	/*class User implements IDBEntity
 	{
 		public int $id = -1;
 		public string $name;
@@ -162,5 +198,75 @@
 			}
 			return self::$cur;
 		}
-	}
+	}*/
+
+	class User implements IDBEntity
+{
+    public int $id = -1;
+    public string $name;
+    public string $login;
+    public string $password;
+    public int $role;
+    public bool $isEducator = false; // Новое поле для воспитателей
+    public array $rights = [];
+
+    public function __construct($id = -1, $row = null)
+    {
+        if ($id > 0)
+        {
+            $response = DbConection::instance()->query(
+                "SELECT * FROM `Users` WHERE `ID`={$id}"
+            );
+            if ($response !== false && $response->num_rows > 0)
+            {
+                $row = $response->fetch_assoc();
+                $this->id = $id;
+                $this->name = $row['Name'];
+                $this->login = $row['Login'];
+                $this->password = $row['Password'];
+                $this->role = $row['IDRole'];
+                $this->isEducator = (bool)$row['IsEducator']; // Загружаем значение IsEducator
+            }
+        }
+        elseif (isset($row))
+        {
+            $this->id = $row['ID'];
+            $this->name = $row['Name'];
+            $this->login = $row['Login'];
+            $this->password = $row['Password'];
+            $this->role = $row['IDRole'];
+            $this->isEducator = (bool)$row['IsEducator']; // Загружаем значение IsEducator
+        }
+    }
+
+    // Остальные методы остаются без изменений, кроме тех, что работают с детьми и воспитателями
+
+    public function list_children()
+    {
+        $response = DbConection::instance()->query(
+            "SELECT * FROM `Kids_Educators` WHERE `IDEducator`={$this->id}"
+        );
+        if ($response !== false)
+        {
+            while ($row = $response->fetch_assoc())
+            {
+                yield new Child(-1, $row);
+            }
+        }
+    }
+
+    public function bind_child(int $id)
+    {
+        DbConection::instance()->query(
+            "INSERT INTO `Kids_Educators`(`IDKid`,`IDEducator`)
+             VALUES({$id},{$this->id})"
+        );
+    }
+
+    // Метод для проверки, является ли пользователь воспитателем
+    public function isEducator(): bool
+    {
+        return $this->isEducator;
+    }
+}
 ?>
