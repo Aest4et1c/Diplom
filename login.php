@@ -1,50 +1,79 @@
-<?php declare(strict_types=1);
-require_once("db.php");
-$success = false;
-$error = false;
-if(isset($_GET["login"]))
-{
-    $enter = DbConection::instance()->query("SELECT * FROM `Users` WHERE `Login` = '{$_GET["login"]}' AND `Password` = '{$_GET["password"]}'");
-    if($enter !== false && $enter->num_rows > 0)
-    {
-        $success = true;
-        setcookie("loggedin", $enter->fetch_row()[0]);
-    }
-    else
-    {
-        $error = true;
-    }
+<?php
+session_start();
+require_once __DIR__ . '/config.php';   // $pdo
+
+/* если уже вошли — на главную */
+if (!empty($_SESSION['user'])) {
+    header('Location: index.php');
+    exit;
 }
 
-?>
+$error = '';
 
-<!DOCTYPE html>
+/* ---------- обработка формы ---------- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $login = trim($_POST['username'] ?? '');
+    $pass  = $_POST['password'] ?? '';
+
+    /* 1. ищем пользователя и активен ли он */
+    $stmt = $pdo->prepare("
+        SELECT id, username, pass_hash, role_id, is_active
+          FROM users
+         WHERE username = ?
+         LIMIT 1
+    ");
+    $stmt->execute([$login]);
+    $u = $stmt->fetch();
+
+    if (!$u || !$u['is_active']) {
+        $error = 'Неверный логин или пароль.';
+    } elseif (!password_verify($pass, $u['pass_hash'])) {
+        $error = 'Неверный логин или пароль.';
+    } elseif ($u['role_id'] != 1) {          // 1 = admin
+        $error = 'Доступ разрешён только администраторам.';
+    } else {
+        /* успех */
+        $_SESSION['user'] = [
+            'id'       => $u['id'],
+            'username' => $u['username'],
+            'role'     => 'admin'
+        ];
+        header('Location: index.php');
+        exit;
+    }
+}
+?>
+<!doctype html>
 <html lang="ru">
-	<head>
-		<title>Главная страница</title>
-		<meta charset="UTF-8">
-		
-		<link rel="stylesheet" href="css.css" type="text/css">
-	</head>
-	<body>
-        <div class="main">
-            <div class="login">
-                <?php if($success){?>
-                    <p>Вы успешно вошли</p>
-                    <a href="/index.php">На главную</a>
-                <?php } else {?>
-                    <form style="text-align: center;" action="/login.php" method="GET">
-                        <label for="login">Логин</label><br>
-                        <input type="text" name="login"><br>
-                        <label for="password">Пароль</label><br>
-                        <input type="password" name="password"><br>
-                        <input style="font-weight: bold;" type="submit" value="Войти">
-                        <?php if($error) {?>
-                            <p>Неверный логин или пароль</p>
-                        <?php }?>
-                    </form>
-                <?php }?>
+<head>
+    <meta charset="utf-8">
+    <title>Вход | Детский сад «Ромашка»</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body{display:flex;align-items:center;justify-content:center;height:100vh;background:#f8f9fa;}</style>
+</head>
+<body>
+<div class="card shadow-sm" style="min-width:320px;max-width:360px;">
+    <div class="card-body p-4">
+        <h4 class="mb-3 text-center">Вход</h4>
+
+        <?php if ($error): ?>
+            <div class="alert alert-danger py-2 small"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <form method="post" autocomplete="off">
+            <div class="mb-3">
+                <label class="form-label">Логин</label>
+                <input type="text" name="username" class="form-control" required value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
             </div>
-        </div>
-	</body>
+
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <button class="btn btn-success w-100" type="submit">Войти</button>
+        </form>
+    </div>
+</div>
+</body>
 </html>
