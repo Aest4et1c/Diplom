@@ -1,38 +1,50 @@
 <?php
-// Единая админ‑панель
+// /admin/index.php — единая админ‑панель (с правками для «Пользователей»)
+
 session_start();
-if (!isset($_SESSION['user']) || $_SESSION['user']['role']!=='admin') {
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit('Доступ разрешён только администраторам');
 }
-require_once __DIR__.'/../config.php';
+
+require_once __DIR__ . '/../config.php';
 
 $username = $_SESSION['user']['username'];
-$section  = $_GET['section'] ?? '';   // staff | news | groups | kids
+$section  = $_GET['section'] ?? '';          // staff | news | groups | kids | users
 
-/*──────────────────── ПРЕ‑действия (удаление детей / сотрудников) ───────────────────*/
-if ($_SERVER['REQUEST_METHOD']==='POST') {
+/* ───────── массовое удаление ───────── */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    /* дети */
-    if ($section==='kids' && isset($_POST['delete_ids'])) {
-        $ids=array_map('intval',$_POST['delete_ids']);
-        if($ids){
-            $in=rtrim(str_repeat('?,',count($ids)),',');
+    if ($section === 'kids' && isset($_POST['delete_ids'])) {
+        $ids = array_map('intval', $_POST['delete_ids']);
+        if ($ids) {
+            $in = rtrim(str_repeat('?,', count($ids)), ',');
             $pdo->prepare("DELETE FROM parent_kid WHERE kid_id IN ($in)")->execute($ids);
             $pdo->prepare("DELETE FROM kids       WHERE id     IN ($in)")->execute($ids);
         }
         header('Location: index.php?section=kids'); exit;
     }
 
-    /* сотрудники */
-    if ($section==='staff' && isset($_POST['staff_delete_ids'])) {
-        $ids=array_map('intval',$_POST['staff_delete_ids']);
-        if($ids){
-            $in=rtrim(str_repeat('?,',count($ids)),',');
+    if ($section === 'staff' && isset($_POST['staff_delete_ids'])) {
+        $ids = array_map('intval', $_POST['staff_delete_ids']);
+        if ($ids) {
+            $in = rtrim(str_repeat('?,', count($ids)), ',');
             $pdo->prepare("DELETE FROM staff WHERE id IN ($in)")->execute($ids);
         }
         header('Location: index.php?section=staff'); exit;
     }
+
+    if ($section === 'users' && isset($_POST['del_ids'])) {
+        $ids = array_map('intval', $_POST['del_ids']);
+        if ($ids) {
+            $in = rtrim(str_repeat('?,', count($ids)), ',');
+            $pdo->prepare("DELETE FROM users WHERE id IN ($in)")->execute($ids);
+        }
+        header('Location: index.php?section=users'); exit;
+    }
 }
+
+/* Справочник ролей */
+$roleName = [1=>'Администратор', 2=>'Воспитатель', 3=>'Родитель'];
 ?>
 <!doctype html>
 <html lang="ru">
@@ -40,36 +52,110 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <meta charset="utf-8">
 <title>Админ‑панель | Ромашка</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>.nav-link.active{background:#0d6efd;color:#fff;} .table-hover tbody tr{cursor:pointer;}</style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
 <header class="bg-success text-white py-2">
   <div class="container d-flex justify-content-between align-items-center">
-     <h1 class="h5 m-0 fw-bold">ГКДОУ «Ромашка» — админ</h1>
-     <div>
-        Здравствуйте,&nbsp;<strong><?=htmlspecialchars($username)?></strong>
-        <a href="/index.php"  class="btn btn-light btn-sm ms-3">← На сайт</a>
-        <a href="/logout.php" class="btn btn-light btn-sm">Выход</a>
-     </div>
+    <h1 class="h5 m-0 fw-bold">ГКДОУ «Ромашка» — админ</h1>
+    <div>
+      Здравствуйте, <strong><?=htmlspecialchars($username)?></strong>
+      <a href="/index.php" class="btn btn-light btn-sm ms-3">← На сайт</a>
+      <a href="/logout.php" class="btn btn-light btn-sm">Выход</a>
+    </div>
   </div>
 </header>
 
 <nav class="bg-white border-bottom">
- <div class="container">
-  <ul class="nav nav-pills justify-content-center py-2 fw-semibold">
-     <li class="nav-item"><a class="nav-link <?=$section==='staff'?'active':''?>"  href="?section=staff">Сотрудники</a></li>
-     <li class="nav-item"><a class="nav-link <?=$section==='news'?'active':''?>"   href="?section=news">Новости</a></li>
-     <li class="nav-item"><a class="nav-link <?=$section==='groups'?'active':''?>" href="?section=groups">Группы</a></li>
-     <li class="nav-item"><a class="nav-link <?=$section==='kids'?'active':''?>"   href="?section=kids">Дети</a></li>
-  </ul>
- </div>
+  <div class="container">
+    <ul class="nav nav-pills justify-content-center py-2 fw-semibold">
+      <li class="nav-item"><a class="nav-link <?=$section==='staff'?'active':''?>"  href="?section=staff">Сотрудники</a></li>
+      <li class="nav-item"><a class="nav-link <?=$section==='news'?'active':''?>"   href="?section=news">Новости</a></li>
+      <li class="nav-item"><a class="nav-link <?=$section==='groups'?'active':''?>" href="?section=groups">Группы</a></li>
+      <li class="nav-item"><a class="nav-link <?=$section==='kids'?'active':''?>"   href="?section=kids">Дети</a></li>
+      <li class="nav-item"><a class="nav-link <?=$section==='users'?'active':''?>"  href="?section=users">Пользователи</a></li>
+    </ul>
+  </div>
 </nav>
 
 <main class="container my-5 flex-grow-1">
 <?php
-switch($section){
+switch ($section) {
+
+/* ───────────────────────────  ПОЛЬЗОВАТЕЛИ  ─────────────────────────── */
+case 'users':
+    /* исключаем учётку admin из списка */
+    $users = $pdo->query("
+        SELECT u.id, u.username, u.role_id, u.staff_id, u.parent_id, u.is_active,
+               s.full_name AS staff_name,
+               p.full_name AS parent_name
+          FROM users u
+     LEFT JOIN staff   s ON s.id = u.staff_id
+     LEFT JOIN parents p ON p.id = u.parent_id
+         WHERE u.username <> 'admin'
+      ORDER BY u.username
+    ")->fetchAll(PDO::FETCH_ASSOC);
+?>
+<h2 class="mb-3">Пользователи</h2>
+
+<div class="mb-3">
+  <a href="users/add.php" class="btn btn-success">+ Добавить пользователя</a>
+  <button id="delUserBtn" class="btn btn-danger ms-2" disabled>Удалить</button>
+</div>
+
+<form id="frmDelUser" method="post">
+<table class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th style="width:40px"><input type="checkbox" id="uCheckAll"></th>
+      <th>Логин</th>
+      <th>Роль</th>
+      <th>Связь</th>
+      <th>Активен</th>
+    </tr>
+  </thead>
+  <tbody>
+  <?php foreach ($users as $u): ?>
+    <tr data-href="users/edit.php?id=<?=$u['id']?>">
+      <td><input type="checkbox" class="u-row" name="del_ids[]" value="<?=$u['id']?>" onclick="event.stopPropagation(); toggleUserDel()"></td>
+      <td><?=htmlspecialchars($u['username'])?></td>
+      <td><?=$roleName[(int)$u['role_id']] ?? '—'?></td>
+      <td>
+        <?php
+          if ($u['staff_id'])      echo htmlspecialchars($u['staff_name']);
+          elseif ($u['parent_id']) echo htmlspecialchars($u['parent_name']);
+          else echo '—';
+        ?>
+      </td>
+      <td><?=$u['is_active'] ? 'Да' : 'Нет'?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+</table>
+</form>
+
+<script>
+function toggleUserDel(){
+  document.getElementById('delUserBtn').disabled = !document.querySelector('.u-row:checked');
+}
+document.getElementById('uCheckAll').onchange = e=>{
+  document.querySelectorAll('.u-row').forEach(c=>c.checked = e.target.checked);
+  toggleUserDel();
+};
+document.getElementById('delUserBtn').onclick = ()=>{
+  if(confirm('Удалить выбранных пользователей?')) document.getElementById('frmDelUser').submit();
+};
+document.querySelectorAll('tbody tr').forEach(tr=>{
+  tr.addEventListener('click', e=>{
+    if(e.target.tagName === 'INPUT') return;
+    location.href = tr.dataset.href;
+  });
+});
+</script>
+<?php
+break;
+
 
 /*──────────────────────────────── СОТРУДНИКИ ─────────────────────────────*/
 case 'staff':

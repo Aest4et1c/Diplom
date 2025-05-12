@@ -62,10 +62,14 @@ $staff = $pdo->query($sql)->fetchAll();
             <?php if (!$user): ?>
                 <a class="btn btn-light btn-sm" href="login.php">Вход</a>
             <?php else: ?>
-                <span class="me-2">Здравствуйте, <strong><?= htmlspecialchars($user['username']) ?></strong></span>
+                <span class="me-2">Здравствуйте, <strong><?= htmlspecialchars($user['name']) ?></strong></span>
                 <?php if ($isAdmin): ?>
-                    <a class="btn btn-warning btn-sm me-2" href="/admin/">Админ-панель</a>
-                <?php endif; ?>
+            <!-- только для администратора -->
+            <a href="/admin/"      class="btn btn-warning btn-sm me-2">Админ‑панель</a>
+        <?php else: ?>
+            <!-- для воспитателя и родителя -->
+            <a href="/profile.php" class="btn btn-primary btn-sm me-2">Личный кабинет</a>
+        <?php endif; ?>
                 <a class="btn btn-light btn-sm" href="logout.php">Выход</a>
             <?php endif; ?>
         </div>

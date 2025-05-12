@@ -51,11 +51,15 @@ $headPhoto = $head['photo_url'] ?: 'uploads/photos/placeholder.jpg';   // зап
                 <a href="login.php" class="btn btn-light btn-sm">Вход</a>
             <?php else: ?>
                 <span class="me-2">
-                    Здравствуйте, <strong><?= htmlspecialchars($currentUser['username']) ?></strong>
+                    Здравствуйте, <strong><?= htmlspecialchars($currentUser['name'] ?? $currentUser['username']) ?></strong>
                 </span>
                 <?php if ($isAdmin): ?>
-                    <a href="/admin/" class="btn btn-warning btn-sm me-2">Админ-панель</a>
-                <?php endif; ?>
+            <!-- только для администратора -->
+            <a href="/admin/"      class="btn btn-warning btn-sm me-2">Админ‑панель</a>
+        <?php else: ?>
+            <!-- для воспитателя и родителя -->
+            <a href="/profile.php" class="btn btn-primary btn-sm me-2">Личный кабинет</a>
+        <?php endif; ?>
                 <a href="logout.php" class="btn btn-light btn-sm">Выход</a>
             <?php endif; ?>
         </div>
