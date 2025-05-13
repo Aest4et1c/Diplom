@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Май 13 2025 г., 20:32
+-- Время создания: Май 13 2025 г., 20:38
 -- Версия сервера: 5.7.39-log
 -- Версия PHP: 7.4.30
 
@@ -27,6 +27,7 @@ SET time_zone = "+00:00";
 -- Структура таблицы `articles`
 --
 
+DROP TABLE IF EXISTS `articles`;
 CREATE TABLE `articles` (
   `id` bigint(20) NOT NULL,
   `title` varchar(150) NOT NULL,
@@ -55,6 +56,7 @@ INSERT INTO `articles` (`id`, `title`, `body`, `cover_image`, `staff_id`, `creat
 -- Структура таблицы `attendance`
 --
 
+DROP TABLE IF EXISTS `attendance`;
 CREATE TABLE `attendance` (
   `id` bigint(20) NOT NULL,
   `kid_id` int(11) NOT NULL,
@@ -69,6 +71,7 @@ CREATE TABLE `attendance` (
 -- Структура таблицы `groups`
 --
 
+DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
@@ -95,6 +98,7 @@ INSERT INTO `groups` (`id`, `name`, `icon`, `room_number`, `age_from`, `age_to`,
 -- Структура таблицы `group_kid_history`
 --
 
+DROP TABLE IF EXISTS `group_kid_history`;
 CREATE TABLE `group_kid_history` (
   `id` int(11) NOT NULL,
   `kid_id` int(11) NOT NULL,
@@ -133,6 +137,7 @@ INSERT INTO `group_kid_history` (`id`, `kid_id`, `group_id`, `from_date`, `to_da
 -- Структура таблицы `group_staff`
 --
 
+DROP TABLE IF EXISTS `group_staff`;
 CREATE TABLE `group_staff` (
   `group_id` int(11) NOT NULL,
   `staff_id` int(11) NOT NULL,
@@ -159,6 +164,7 @@ INSERT INTO `group_staff` (`group_id`, `staff_id`, `lead_teacher`) VALUES
 -- Структура таблицы `kids`
 --
 
+DROP TABLE IF EXISTS `kids`;
 CREATE TABLE `kids` (
   `id` int(11) NOT NULL,
   `full_name` varchar(120) NOT NULL,
@@ -197,6 +203,7 @@ INSERT INTO `kids` (`id`, `full_name`, `birth_date`, `medical_note`) VALUES
 -- Структура таблицы `media_files`
 --
 
+DROP TABLE IF EXISTS `media_files`;
 CREATE TABLE `media_files` (
   `id` bigint(20) NOT NULL,
   `file_url` varchar(255) NOT NULL,
@@ -222,6 +229,7 @@ INSERT INTO `media_files` (`id`, `file_url`, `caption`, `uploaded_at`, `article_
 -- Структура таблицы `media_files_backup`
 --
 
+DROP TABLE IF EXISTS `media_files_backup`;
 CREATE TABLE `media_files_backup` (
   `id` bigint(20) NOT NULL,
   `file_url` varchar(255) NOT NULL,
@@ -238,6 +246,7 @@ CREATE TABLE `media_files_backup` (
 -- Структура таблицы `parents`
 --
 
+DROP TABLE IF EXISTS `parents`;
 CREATE TABLE `parents` (
   `id` int(11) NOT NULL,
   `full_name` varchar(120) NOT NULL,
@@ -281,6 +290,7 @@ INSERT INTO `parents` (`id`, `full_name`, `phone`, `email`, `address`, `social_c
 -- Структура таблицы `parent_kid`
 --
 
+DROP TABLE IF EXISTS `parent_kid`;
 CREATE TABLE `parent_kid` (
   `parent_id` int(11) NOT NULL,
   `kid_id` int(11) NOT NULL
@@ -317,6 +327,7 @@ INSERT INTO `parent_kid` (`parent_id`, `kid_id`) VALUES
 -- Структура таблицы `roles`
 --
 
+DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
@@ -338,6 +349,7 @@ INSERT INTO `roles` (`id`, `name`, `description`) VALUES
 -- Структура таблицы `staff`
 --
 
+DROP TABLE IF EXISTS `staff`;
 CREATE TABLE `staff` (
   `id` int(11) NOT NULL,
   `full_name` varchar(120) NOT NULL,
@@ -367,6 +379,7 @@ INSERT INTO `staff` (`id`, `full_name`, `position`, `hire_date`, `fire_date`, `p
 -- Структура таблицы `users`
 --
 
+DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(60) NOT NULL,
