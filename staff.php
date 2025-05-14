@@ -1,9 +1,7 @@
 <?php
-//Hello world
-
 /**
  * staff.php — страница «Сотрудники»
- * Теперь карточки одинаковой высоты: фото 220 px, фикс-ширина 250 px.
+ * Карточки фикс‑размера 250 × (3/4), целиком кликабельны: переход на profile.php?staff_id=…
  */
 
 session_start();
@@ -14,7 +12,7 @@ $isAdmin = $user && $user['role'] === 'admin';
 
 /* Выбираем сотрудников: заведующий → воспитатель → остальные */
 $sql = "
-    SELECT full_name, position, photo_url
+    SELECT id, full_name, position, photo_url          -- id нужен для ссылки
       FROM staff
      WHERE fire_date IS NULL OR fire_date > CURDATE()
   ORDER BY
@@ -32,21 +30,20 @@ $staff = $pdo->query($sql)->fetchAll();
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Сотрудники | Детский сад № 12 «Ромашка»</title>
+    <title>Сотрудники | Детский сад № 12 «Ромашка»</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-
-    .staff-card        { max-width: 250px; margin: 0 auto; }
+    .staff-card        { max-width: 250px; margin: 0 auto; cursor: pointer; }
 
     .staff-card__photo {
-    width: 100%;              
-    aspect-ratio: 3 / 4;      
-    object-fit: cover;        
-    object-position: top;     
-    border-top-left-radius: .375rem;  
-    border-top-right-radius: .375rem;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        object-position: top;
+        border-top-left-radius: .375rem;
+        border-top-right-radius: .375rem;
     }
 
     .staff-card__body { padding: 1rem; }
@@ -59,19 +56,17 @@ $staff = $pdo->query($sql)->fetchAll();
 <!-- верхняя полоска -->
 <header class="bg-success text-white py-2">
     <div class="container d-flex justify-content-between align-items-center">
-        <h1 class="h5 m-0 fw-bold">ГКДОУ «Детский сад № 12 «Ромашка»</h1>
+        <h1 class="h5 m-0 fw-bold">ГКДОУ «Детский сад № 12 «Ромашка»</h1>
         <div>
             <?php if (!$user): ?>
                 <a class="btn btn-light btn-sm" href="login.php">Вход</a>
             <?php else: ?>
                 <span class="me-2">Здравствуйте, <strong><?= htmlspecialchars($user['name']) ?></strong></span>
                 <?php if ($isAdmin): ?>
-            <!-- только для администратора -->
-            <a href="/admin/"      class="btn btn-warning btn-sm me-2">Админ‑панель</a>
-        <?php else: ?>
-            <!-- для воспитателя и родителя -->
-            <a href="/profile.php" class="btn btn-primary btn-sm me-2">Личный кабинет</a>
-        <?php endif; ?>
+                    <a href="/admin/"      class="btn btn-warning btn-sm me-2">Админ‑панель</a>
+                <?php else: ?>
+                    <a href="/profile.php" class="btn btn-primary btn-sm me-2">Личный кабинет</a>
+                <?php endif; ?>
                 <a class="btn btn-light btn-sm" href="logout.php">Выход</a>
             <?php endif; ?>
         </div>
@@ -101,17 +96,19 @@ $staff = $pdo->query($sql)->fetchAll();
         <div class="row g-4">
             <?php foreach ($staff as $p): ?>
                 <?php
+                    $id    = (int)$p['id'];
                     $photo = $p['photo_url'] ?: 'uploads/photos/placeholder.jpg';
                     $name  = implode('<br>', array_map('htmlspecialchars', explode(' ', $p['full_name'])));
                 ?>
                 <div class="col-sm-6 col-md-4 col-lg-3">
-                    <div class="card staff-card h-100 shadow-sm border-0">
+                    <a href="profile.php?staff_id=<?= $id ?>"
+                       class="card staff-card h-100 shadow-sm border-0 text-decoration-none text-dark d-block">
                         <img class="staff-card__photo" src="<?= htmlspecialchars($photo) ?>" alt="Фото сотрудника">
                         <div class="staff-card__body">
                             <p class="staff-card__pos mb-1"><?= htmlspecialchars($p['position']) ?></p>
                             <p class="staff-card__name mb-0"><?= $name ?></p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -119,9 +116,8 @@ $staff = $pdo->query($sql)->fetchAll();
 </main>
 
 <footer class="bg-success text-white py-2 mt-auto">
-    <div class="container small">© <?= date('Y') ?> Детский сад № 12 «Ромашка»</div>
+    <div class="container small">© <?= date('Y') ?> Детский сад № 12 «Ромашка»</div>
 </footer>
 
 </body>
 </html>
-

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Май 13 2025 г., 20:38
+-- Время создания: Май 14 2025 г., 13:48
 -- Версия сервера: 5.7.39-log
 -- Версия PHP: 7.4.30
 
@@ -48,7 +48,8 @@ INSERT INTO `articles` (`id`, `title`, `body`, `cover_image`, `staff_id`, `creat
 (6, 'Наш огород на подоконнике: посадка зелени', 'В старшей группе «Радуга» стартовал познавательный проект «Огород на подоконнике». Вместе с воспитателем ребята посадили семена укропа и базилика. Теперь каждый день дети наблюдают, как появляются всходы, поливают растения и учатся ухаживать за ними.', 'image/Огород на.jpg', NULL, '2025-05-01 09:56:17', '2025-05-07 11:29:43', 1),
 (9, 'Test', 'TestTestTestTestTestTestTestTestTestTestTestTestTestTest', 'image/6818a53464684.jpg', NULL, '2025-05-05 14:47:00', '2025-05-05 15:30:10', 1),
 (10, 'Сегодня защита Диплома', 'Оберемок Янислав Николаевич защитил диплом на 5', 'image/6818b4814b713.jpg', NULL, '2025-05-05 15:52:17', '2025-05-05 16:57:57', 1),
-(11, 'dfdhgsdfgh', 'gfhsdxfghdfghdfghdfghdrfh', 'image/681b1b6b70624.jpg', NULL, '2025-05-07 11:35:55', '2025-05-07 11:35:55', 0);
+(11, 'dfdhgsdfgh', 'gfhsdxfghdfghdfghdfghdrfh', 'image/681b1b6b70624.jpg', NULL, '2025-05-07 11:35:55', '2025-05-07 11:35:55', 0),
+(14, 'Test 3', 'Test 4', 'image/6824558d24ef3.jpg', 7, '2025-05-14 11:34:21', '2025-05-14 13:39:33', 1);
 
 -- --------------------------------------------------------
 
@@ -221,7 +222,8 @@ INSERT INTO `media_files` (`id`, `file_url`, `caption`, `uploaded_at`, `article_
 (8, 'image/6818bd4583c2e.jpg', '', '2025-05-05 16:29:41', 10),
 (9, 'image/6818c3e5f2e63.jpg', '', '2025-05-05 16:39:16', 10),
 (10, 'image/6818c3e5f3064.jpg', '', '2025-05-05 16:57:57', 10),
-(11, 'image/681b1b6b70ae9.jpg', '', '2025-05-07 11:35:55', 11);
+(11, 'image/681b1b6b70ae9.jpg', '', '2025-05-07 11:35:55', 11),
+(12, 'image/6824558d26109.jpg', '', '2025-05-14 11:34:21', 14);
 
 -- --------------------------------------------------------
 
@@ -504,7 +506,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT для таблицы `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT для таблицы `attendance`
@@ -534,7 +536,7 @@ ALTER TABLE `kids`
 -- AUTO_INCREMENT для таблицы `media_files`
 --
 ALTER TABLE `media_files`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT для таблицы `media_files_backup`
