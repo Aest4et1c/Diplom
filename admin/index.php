@@ -11,9 +11,9 @@ require_once __DIR__ . '/../config.php';
 $username = $_SESSION['user']['username'];
 $section  = $_GET['section'] ?? '';          // staff | news | groups | kids | users
 
-/* ───────── массовое удаление ───────── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    /* ДЕТИ ------------------------------------------------------------- */
     if ($section === 'kids' && isset($_POST['delete_ids'])) {
         $ids = array_map('intval', $_POST['delete_ids']);
         if ($ids) {
@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: index.php?section=kids'); exit;
     }
 
+    /* СОТРУДНИКИ ------------------------------------------------------- */
     if ($section === 'staff' && isset($_POST['staff_delete_ids'])) {
         $ids = array_map('intval', $_POST['staff_delete_ids']);
         if ($ids) {
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: index.php?section=staff'); exit;
     }
 
+    /* ПОЛЬЗОВАТЕЛИ ----------------------------------------------------- */
     if ($section === 'users' && isset($_POST['del_ids'])) {
         $ids = array_map('intval', $_POST['del_ids']);
         if ($ids) {
@@ -40,6 +42,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("DELETE FROM users WHERE id IN ($in)")->execute($ids);
         }
         header('Location: index.php?section=users'); exit;
+    }
+
+    /* НОВОСТИ ---------------------------------------------------------- */
+    if ($section === 'news' && isset($_POST['news_delete_ids'])) {
+        $ids = array_map('intval', $_POST['news_delete_ids']);
+        if ($ids) {
+            $in = rtrim(str_repeat('?,', count($ids)), ',');
+            $pdo->prepare("DELETE FROM articles WHERE id IN ($in)")->execute($ids);
+        }
+        header('Location: index.php?section=news'); exit;   // ← будет выполнен ДО вывода HTML
+    }
+
+    /* ГРУППЫ ----------------------------------------------------------- */
+    if ($section === 'groups' && isset($_POST['group_delete_ids'])) {
+        $ids = array_map('intval', $_POST['group_delete_ids']);
+        if ($ids) {
+            $in = rtrim(str_repeat('?,', count($ids)), ',');
+
+            /* 1 — отвязываем детей */
+            $pdo->prepare("DELETE FROM group_kid_history WHERE group_id IN ($in)")->execute($ids);
+            /* 2 — отвязываем воспитателей */
+            $pdo->prepare("DELETE FROM group_staff WHERE group_id IN ($in)")->execute($ids);
+            /* 3 — удаляем группы */
+            $pdo->prepare("DELETE FROM groups WHERE id IN ($in)")->execute($ids);
+        }
+        header('Location: index.php?section=groups'); exit;
     }
 }
 
