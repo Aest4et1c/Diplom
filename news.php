@@ -46,6 +46,8 @@ $articles = $st->fetchAll(PDO::FETCH_ASSOC);
 <head>
 <meta charset="utf-8">
 <title>Новости | Детский сад «Ромашка»</title>
+<link rel="icon" type="image/png" href="/image/web_logo.png">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
   .news-card:hover{text-decoration:none;box-shadow:0 .5rem 1rem rgba(0,0,0,.15);}

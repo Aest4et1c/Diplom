@@ -66,6 +66,8 @@ $freeKids=$pdo->query("SELECT id,full_name FROM kids WHERE id NOT IN(SELECT kid_
 ?>
 <!doctype html><html lang="ru"><head>
 <meta charset="utf-8"><title>Редактировать группу</title>
+<link rel="icon" type="image/png" href="/image/web_logo.png">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>.photo{width:64px;height:85px;object-fit:cover;border-radius:.25rem} li.sel{color:#0d6efd;font-weight:500}</style>
