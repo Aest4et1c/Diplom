@@ -1,0 +1,131 @@
+/* admin-panel.css — унифицированный стиль админ-панели поверх Bootstrap 5 */
+
+/* ---------- Переменные ---------- */
+:root {
+  --ap-brand: #0d6efd;
+  --ap-bg: #f8f9fa;
+  --ap-border: #dee2e6;
+  --ap-radius: .5rem;
+}
+
+/* ---------- Базовые ---------- */
+body {
+  background-color: var(--ap-bg);
+}
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+}
+a {
+  text-decoration: none;
+}
+
+/* ---------- Header / Footer ---------- */
+header.bg-success,
+footer.bg-success {
+  background-color: var(--ap-brand) !important;
+}
+header.bg-success .btn-light,
+footer .btn-light {
+  --bs-btn-bg: #fff;
+  --bs-btn-color: #000;
+}
+
+/* ---------- Навигация ---------- */
+.nav-pills .nav-link {
+  color: #000;
+  font-weight: 500;
+}
+.nav-pills .nav-link.active {
+  background-color: var(--ap-brand);
+  color: #fff;
+}
+
+/* ---------- Кнопки ---------- */
+.btn-success {
+  background-color: #198754;
+  border: none;
+}
+.btn-danger {
+  background-color: #dc3545;
+  border: none;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--ap-brand);
+  --bs-btn-border-color: var(--ap-brand);
+}
+.btn-outline-primary:hover {
+  background-color: var(--ap-brand);
+  color: #fff;
+}
+
+/* ---------- Карточки для форм ---------- */
+.item-card,
+.card.item-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--ap-border);
+  border-radius: var(--ap-radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.item-card .btn-close {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  opacity: .6;
+}
+.item-card .btn-close:hover {
+  opacity: 1;
+}
+
+/* ---------- Формы ---------- */
+.form-label {
+  font-weight: 500;
+}
+.form-control,
+.form-select {
+  border-radius: var(--ap-radius);
+}
+
+/* ---------- Таблицы ---------- */
+.table {
+  background: #fff;
+  border-radius: var(--ap-radius);
+  overflow: hidden;
+}
+.table thead th {
+  background-color: var(--ap-border);
+  font-weight: 600;
+}
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, .04);
+}
+.table tbody tr {
+  cursor: pointer;
+}
+.table input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--ap-brand);
+}
+
+/* ---------- Специальные утилиты ---------- */
+#catFilter {
+  min-width: 160px;
+}
+.modal-content {
+  border-radius: var(--ap-radius);
+}
+.btn + .btn {
+  margin-left: .5rem;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 576px) {
+  .table {
+    font-size: .875rem;
+  }
+  header .h5 {
+    font-size: 1rem;
+  }
+}
