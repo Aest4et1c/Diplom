@@ -186,41 +186,115 @@ document.querySelectorAll('tbody tr').forEach(tr=>{
 <?php
 break;
 
-/*──────────────────────────────── СОТРУДНИКИ ─────────────────────────────*/
+/*────────────────────────── СОТРУДНИКИ ──────────────────────────*/
 case 'staff':
-    $workers=$pdo->query("SELECT id,full_name,position,hire_date,photo_url FROM staff ORDER BY full_name")->fetchAll();
+
+    /* ── фильтр: действующие | уволенные ─────────────────────── */
+    $show = ($_GET['show'] ?? 'active') === 'fire' ? 'fire' : 'active';
+
+    $cond = ($show === 'active')
+          ? '(fire_date IS NULL OR fire_date > CURDATE())'
+          : '(fire_date IS NOT NULL AND fire_date <= CURDATE())';
+
+    $workers = $pdo->query("
+        SELECT id, full_name, position, hire_date, fire_date, photo_url
+          FROM staff
+         WHERE $cond
+      ORDER BY full_name
+    ")->fetchAll();
 ?>
 <h2 class="mb-3">Сотрудники</h2>
-<div class="mb-3">
-   <a href="staff/add.php" class="btn btn-success">+ Добавить сотрудника</a>
-   <button id="delStaffBtn" class="btn btn-danger ms-2" disabled>Удалить</button>
+
+<!-- ───── панель действий ───── -->
+<div class="row g-2 align-items-center mb-3">
+  <div class="col-auto">
+      <a href="staff/add.php" class="btn btn-success me-2">+ Добавить сотрудника</a>
+      <button id="delStaffBtn" class="btn btn-danger" disabled>Удалить</button>
+  </div>
+
+  <!-- переключатель активные / уволенные -->
+  <div class="col-auto">
+    <form method="get" class="m-0">
+      <input type="hidden" name="section" value="staff">
+      <select name="show" class="form-select" onchange="this.form.submit()">
+          <option value="active" <?=$show==='active'?'selected':''?>>Действующие</option>
+          <option value="fire"   <?=$show==='fire'  ?'selected':''?>>Уволенные</option>
+      </select>
+    </form>
+  </div>
+
+  <!-- живой поиск по фамилии / имени -->
+  <div class="col-auto flex-grow-1" style="min-width:200px">
+      <input type="search" id="staffSearch" class="form-control"
+             placeholder="Поиск сотрудника">
+  </div>
 </div>
+
 <form id="frmDelStaff" method="post">
 <table class="table table-hover align-middle">
- <thead class="table-light"><tr>
-   <th style="width:40px"><input type="checkbox" id="stAll"></th>
-   <th style="width:60px"></th><th>ФИО</th><th>Должность</th><th>Дата найма</th>
- </tr></thead><tbody>
- <?php foreach($workers as $w): ?>
-  <tr data-href="staff/edit.php?id=<?=$w['id']?>">
-   <td><input type="checkbox" class="stRow" name="staff_delete_ids[]" value="<?=$w['id']?>"
-              onclick="event.stopPropagation(); toggleSt()"></td>
-   <td><?php if($w['photo_url']):?><img src="/<?=htmlspecialchars($w['photo_url'])?>" style="height:48px;object-fit:cover;border-radius:.25rem"><?php endif;?></td>
-   <td><?=htmlspecialchars($w['full_name'])?></td>
-   <td><?=htmlspecialchars($w['position'])?></td>
-   <td><?=date('d.m.Y',strtotime($w['hire_date']))?></td>
-  </tr>
- <?php endforeach;?>
- </tbody></table></form>
+  <thead class="table-light">
+    <tr>
+      <th style="width:40px"><input type="checkbox" id="stAll"></th>
+      <th style="width:60px"></th>
+      <th>ФИО</th>
+      <th>Должность</th>
+      <th>Дата найма</th>
+    </tr>
+  </thead>
+  <tbody>
+  <?php foreach ($workers as $w): ?>
+    <tr data-href="staff/edit.php?id=<?=$w['id']?>">
+      <td>
+        <input type="checkbox" class="stRow" name="staff_delete_ids[]" value="<?=$w['id']?>"
+               onclick="event.stopPropagation(); toggleSt()">
+      </td>
+      <td>
+        <?php if ($w['photo_url']): ?>
+            <img src="/<?=htmlspecialchars($w['photo_url'])?>" style="height:48px;object-fit:cover;border-radius:.25rem">
+        <?php endif; ?>
+      </td>
+      <td><?=htmlspecialchars($w['full_name'])?></td>
+      <td><?=htmlspecialchars($w['position'])?></td>
+      <td><?=date('d.m.Y', strtotime($w['hire_date']))?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+</table>
+</form>
 
 <script>
-function toggleSt(){delStaffBtn.disabled=!document.querySelector('.stRow:checked');}
-stAll.onchange=e=>{document.querySelectorAll('.stRow').forEach(c=>c.checked=e.target.checked);toggleSt();}
-delStaffBtn.onclick=()=>{if(confirm('Удалить выбранных?')) frmDelStaff.submit();}
-document.querySelectorAll('tbody tr').forEach(tr=>{tr.onclick=e=>{if(e.target.tagName!=='INPUT')location=tr.dataset.href;}});
+/* ───── кнопка «Удалить» ───── */
+function toggleSt(){ delStaffBtn.disabled = !document.querySelector('.stRow:checked'); }
+stAll.onchange = e => {
+    document.querySelectorAll('.stRow').forEach(c => c.checked = e.target.checked);
+    toggleSt();
+};
+delStaffBtn.onclick = () => {
+    if (confirm('Удалить выбранных?')) frmDelStaff.submit();
+};
+
+/* ───── переход к карточке сотрудника ───── */
+document.querySelectorAll('tbody tr').forEach(tr => {
+    tr.onclick = e => {
+        if (e.target.tagName !== 'INPUT') location = tr.dataset.href;
+    };
+});
+
+/* ───── живой поиск (фамилия + имя в любом порядке) ───── */
+const searchInput = document.getElementById('staffSearch');
+searchInput.addEventListener('input', function(){
+    const terms = this.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const show = terms.every(t => text.includes(t));
+        row.style.display = show ? '' : 'none';
+    });
+});
 </script>
 <?php
 break;
+
+
 
 /*────────────────────────────────── НОВОСТИ ─────────────────────────────*/
 case 'news':
@@ -357,118 +431,121 @@ document.getElementById('delGroupBtn').onclick = ()=>{
 break;
 
 /*────────────────────────────────  ДЕТИ  ────────────────────────────*/
-/*──────────────  ДЕТИ  ─────────────────────────────────────────────*/
+/*──────────────────────────────  ДЕТИ  ───────────────────────────*/
 case 'kids':
-/* данные, как прежде, но другой разделитель, чтобы легко разбивать на массивы */
-$kids = $pdo->query("
-    SELECT k.id,
-           k.full_name,
-           k.birth_date,
-           GROUP_CONCAT(p.full_name        ORDER BY pk.parent_id SEPARATOR '|||') AS parents,
-           GROUP_CONCAT(IFNULL(p.social_category,'') ORDER BY pk.parent_id SEPARATOR '|||') AS cats
-      FROM kids k
- LEFT JOIN parent_kid pk ON pk.kid_id   = k.id
- LEFT JOIN parents    p  ON p.id        = pk.parent_id
-  GROUP BY k.id
-  ORDER BY k.full_name
-")->fetchAll(PDO::FETCH_ASSOC);
 
-/* уникальные категории – для селекта */
-$catList=[];
-foreach($kids as $r){
-  foreach(explode('|||',$r['cats']) as $c){
-     $c=trim($c); if($c!=='') $catList[$c]=true;
-  }
-}
-ksort($catList);
+    /* данные */
+    $kids = $pdo->query("
+        SELECT k.id,
+               k.full_name,
+               k.birth_date,
+               GROUP_CONCAT(p.full_name ORDER BY pk.parent_id SEPARATOR ', ')        AS parents,
+               GROUP_CONCAT(IFNULL(p.social_category,'') ORDER BY pk.parent_id SEPARATOR ', ') AS cats
+          FROM kids k
+     LEFT JOIN parent_kid pk ON pk.kid_id = k.id
+     LEFT JOIN parents    p  ON p.id      = pk.parent_id
+      GROUP BY k.id
+      ORDER BY k.full_name
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    /* категории для селекта */
+    $catList = [];
+    foreach ($kids as $r) {
+        foreach (explode(', ', $r['cats']) as $c) {
+            $c = trim($c); if ($c !== '') $catList[$c] = true;
+        }
+    }
+    ksort($catList);
 ?>
 <h2 class="mb-3">Дети</h2>
 
 <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
   <a href="kids/add.php" class="btn btn-success">+ Добавить ребёнка</a>
-  <button id="delK" class="btn btn-danger" disabled>Удалить</button>
+  <button id="delBtn" class="btn btn-danger" disabled>Удалить</button>
 
-  <div class="ms-auto">
-    <select id="catFilter" class="form-select form-select-sm">
-       <option value="">Все категории</option>
-       <?php foreach($catList as $c=>$_): ?>
-          <option value="<?=$c?>"><?=htmlspecialchars($c)?></option>
-       <?php endforeach;?>
-    </select>
-  </div>
+  <button id="searchToggle" class="btn btn-outline-secondary ms-2">
+      🔍 Найти ребёнка / родителя
+  </button>
+
+  <select id="catFilter" class="form-select form-select-sm ms-auto" style="max-width:200px">
+      <option value="">Все соц. категории</option>
+      <?php foreach ($catList as $c=>$_): ?>
+          <option value="<?=htmlspecialchars(strtolower($c))?>"><?=htmlspecialchars($c)?></option>
+      <?php endforeach; ?>
+  </select>
 </div>
 
-<form id="frmK" method="post">
+<div id="searchBox" class="mb-3 d-none">
+   <input type="search" id="liveSearch" class="form-control" placeholder="Введите фамилию / имя…">
+</div>
+
+<form id="frmKids" method="post">
 <table class="table table-hover align-middle" id="kidTable">
-<thead class="table-light">
+ <thead class="table-light">
   <tr>
-    <th style="width:40px"><input type="checkbox" id="kAll"></th>
-    <th>ФИО</th><th>Дата рождения</th><th>Родители</th><th>Соц. категория</th>
+    <th style="width:40px"><input type="checkbox" id="checkAll"></th>
+    <th>ФИО ребёнка</th><th>Дата рождения</th><th>Родители</th><th>Соц. категория</th>
   </tr>
-</thead>
-<tbody>
-<?php foreach($kids as $row): ?>
-  <?php
-     /* для атрибутов сохраняем списки "|||"-разделённые */
-     $attrParents = htmlspecialchars($row['parents']);
-     $attrCats    = htmlspecialchars($row['cats']);
-  ?>
-  <tr data-href="kids/edit.php?id=<?=$row['id']?>"
-      data-parents="<?=$attrParents?>" data-cats="<?=$attrCats?>">
-    <td><input type="checkbox" class="rowK" name="delete_ids[]" value="<?=$row['id']?>"
-               onclick="event.stopPropagation(); toggleK()"></td>
-    <td><?=htmlspecialchars($row['full_name'])?></td>
-    <td><?=date('d.m.Y',strtotime($row['birth_date']))?></td>
-    <td class="cell-parents"><?=htmlspecialchars(str_replace('|||', ', ', $row['parents']))?></td>
-    <td class="cell-cats"><?=htmlspecialchars(str_replace('|||', ', ', $row['cats']))?></td>
-  </tr>
-<?php endforeach;?>
-</tbody>
+ </thead>
+ <tbody>
+ <?php foreach ($kids as $row): ?>
+   <tr data-href="kids/edit.php?id=<?=$row['id']?>"
+       data-cat="<?=strtolower(str_replace(',',' ', $row['cats']))?>">
+     <td><input type="checkbox" class="row-check" name="delete_ids[]" value="<?=$row['id']?>"
+                onclick="event.stopPropagation(); toggleDel()"></td>
+     <td><?=htmlspecialchars($row['full_name'])?></td>
+     <td><?=date('d.m.Y',strtotime($row['birth_date']))?></td>
+     <td><?=htmlspecialchars($row['parents'])?></td>
+     <td><?=htmlspecialchars($row['cats'])?></td>
+   </tr>
+ <?php endforeach; ?>
+ </tbody>
 </table>
 </form>
 
 <script>
-/* массовое удаление */
-function toggleK(){delK.disabled=!document.querySelector('.rowK:checked');}
-kAll.onchange=e=>{document.querySelectorAll('.rowK').forEach(c=>c.checked=e.target.checked);toggleK();}
-delK.onclick=()=>{if(confirm('Удалить?')) frmK.submit();}
+/* ─── массовое удаление ─── */
+function toggleDel(){ delBtn.disabled = !document.querySelector('.row-check:checked'); }
+checkAll.onchange = e=>{
+    document.querySelectorAll('.row-check').forEach(c=>c.checked = e.target.checked);
+    toggleDel();
+};
+delBtn.onclick = ()=>{ if(confirm('Удалить выбранные данные?')) frmKids.submit(); };
 
-/* переход по строке */
+/* ─── переход к редактированию ─── */
 document.querySelectorAll('#kidTable tbody tr').forEach(tr=>{
-  tr.onclick=e=>{if(e.target.tagName!=='INPUT') location=tr.dataset.href;}
+    tr.onclick = e=>{ if(e.target.tagName!=='INPUT') location = tr.dataset.href; };
 });
 
-/* ——— фильтр по категории ——— */
-catFilter.onchange=()=>{
-  const val = catFilter.value.trim();
-  document.querySelectorAll('#kidTable tbody tr').forEach(tr=>{
-      const names = tr.dataset.parents.split('|||');
-      const cats  = tr.dataset.cats.split('|||');
-
-      /* ищем совпадения */
-      let matchedNames=[], matchedCats=[];
-      cats.forEach((c,i)=>{
-          if(!val || c.trim()===val){
-              matchedNames.push(names[i].trim());
-              matchedCats.push(c.trim());
-          }
-      });
-
-      if(val && matchedNames.length===0){
-          tr.style.display='none';
-      }else{
-          tr.style.display='';
-          /* обновляем ячейки */
-          tr.querySelector('.cell-parents').textContent = matchedNames.join(', ');
-          tr.querySelector('.cell-cats').textContent    = matchedCats.join(', ');
-      }
-  });
+/* ─── показать / скрыть строку поиска ─── */
+const searchBox  = document.getElementById('searchBox');
+const searchBtn  = document.getElementById('searchToggle');
+const searchInput= document.getElementById('liveSearch');
+searchBtn.onclick = ()=>{
+    searchBox.classList.toggle('d-none');
+    if(!searchBox.classList.contains('d-none')) searchInput.focus();
 };
-/* при загрузке – показать всё */
-catFilter.dispatchEvent(new Event('change'));
+
+/* ─── живой фильтр ─── */
+const catSelect = document.getElementById('catFilter');
+function liveFilter(){
+    const terms  = searchInput.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const catVal = catSelect.value;      // '' или выбранная категория
+
+    document.querySelectorAll('#kidTable tbody tr').forEach(row=>{
+        const rowText = row.innerText.toLowerCase();     // ребёнок + родители
+        const txtOk   = terms.every(t=>rowText.includes(t));
+        const catOk   = !catVal || row.dataset.cat.includes(catVal);
+
+        row.style.display = (txtOk && catOk) ? '' : 'none';
+    });
+}
+searchInput.addEventListener('input', liveFilter);
+catSelect  .addEventListener('change', liveFilter);
 </script>
 <?php
 break;
+
 
 /*──────────────────────────── Заглушка по умолчанию ───────────────*/
 default:
