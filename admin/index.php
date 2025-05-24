@@ -432,16 +432,20 @@ break;
 
 /*────────────────────────────────  ДЕТИ  ────────────────────────────*/
 /*──────────────────────────────  ДЕТИ  ───────────────────────────*/
+<<<<<<< HEAD
+/*───────────────────────────  ДЕТИ  ────────────────────────────*/
+=======
 
+>>>>>>> 088cb62820ca650806ecdaf7d594d39b14b4adfa
 case 'kids':
 
-    /* данные */
+    /* --- данные из БД --- */
     $kids = $pdo->query("
         SELECT k.id,
                k.full_name,
                k.birth_date,
-               GROUP_CONCAT(p.full_name ORDER BY pk.parent_id SEPARATOR ', ')        AS parents,
-               GROUP_CONCAT(IFNULL(p.social_category,'') ORDER BY pk.parent_id SEPARATOR ', ') AS cats
+               GROUP_CONCAT(p.full_name        ORDER BY pk.parent_id SEPARATOR ', ') AS parents,
+               GROUP_CONCAT(IFNULL(p.social_category,'') ORDER BY pk.parent_id SEPARATOR ',')  AS cats
           FROM kids k
      LEFT JOIN parent_kid pk ON pk.kid_id = k.id
      LEFT JOIN parents    p  ON p.id      = pk.parent_id
@@ -449,14 +453,23 @@ case 'kids':
       ORDER BY k.full_name
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    /* категории для селекта */
+    /* --- справочник категорий для <select> --- */
     $catList = [];
-    foreach ($kids as $r) {
-        foreach (explode(', ', $r['cats']) as $c) {
-            $c = trim($c); if ($c !== '') $catList[$c] = true;
+    foreach ($kids as &$row) {
+        $slugs = [];
+        foreach (explode(',', $row['cats']) as $c) {
+            $c = trim($c);
+            if ($c === '') continue;
+            $slug       = mb_strtolower($c);
+            $catList[$c]= true;        // для селекта
+            $slugs[]    = $slug;       // для data-атрибута
         }
+        /* сохраняем slug’и в строку `slug1|slug2` */
+        $row['cat_slugs'] = implode('|', $slugs);
+        /* красиво выводим категории через запятую + пробел */
+        $row['cats_disp'] = implode(', ', array_keys(array_flip(array_map('trim', explode(',', $row['cats'])))));
     }
-    ksort($catList);
+    ksort($catList);           // алфавит селекта
 ?>
 <h2 class="mb-3">Дети</h2>
 
@@ -471,7 +484,7 @@ case 'kids':
   <select id="catFilter" class="form-select form-select-sm ms-auto" style="max-width:200px">
       <option value="">Все соц. категории</option>
       <?php foreach ($catList as $c=>$_): ?>
-          <option value="<?=htmlspecialchars(strtolower($c))?>"><?=htmlspecialchars($c)?></option>
+          <option value="<?=htmlspecialchars(mb_strtolower($c))?>"><?=htmlspecialchars($c)?></option>
       <?php endforeach; ?>
   </select>
 </div>
@@ -491,13 +504,13 @@ case 'kids':
  <tbody>
  <?php foreach ($kids as $row): ?>
    <tr data-href="kids/edit.php?id=<?=$row['id']?>"
-       data-cat="<?=strtolower(str_replace(',',' ', $row['cats']))?>">
+       data-cat="<?=$row['cat_slugs']?>">
      <td><input type="checkbox" class="row-check" name="delete_ids[]" value="<?=$row['id']?>"
                 onclick="event.stopPropagation(); toggleDel()"></td>
      <td><?=htmlspecialchars($row['full_name'])?></td>
      <td><?=date('d.m.Y',strtotime($row['birth_date']))?></td>
      <td><?=htmlspecialchars($row['parents'])?></td>
-     <td><?=htmlspecialchars($row['cats'])?></td>
+     <td><?=htmlspecialchars($row['cats_disp'])?></td>
    </tr>
  <?php endforeach; ?>
  </tbody>
@@ -505,40 +518,38 @@ case 'kids':
 </form>
 
 <script>
-/* ─── массовое удаление ─── */
+/* — массовое удаление — */
 function toggleDel(){ delBtn.disabled = !document.querySelector('.row-check:checked'); }
 checkAll.onchange = e=>{
-    document.querySelectorAll('.row-check').forEach(c=>c.checked = e.target.checked);
+    document.querySelectorAll('.row-check').forEach(c => c.checked = e.target.checked);
     toggleDel();
 };
 delBtn.onclick = ()=>{ if(confirm('Удалить выбранные данные?')) frmKids.submit(); };
 
-/* ─── переход к редактированию ─── */
+/* — переход к карточке — */
 document.querySelectorAll('#kidTable tbody tr').forEach(tr=>{
-    tr.onclick = e=>{ if(e.target.tagName!=='INPUT') location = tr.dataset.href; };
+    tr.onclick = e => { if(e.target.tagName!=='INPUT') location = tr.dataset.href; };
 });
 
-/* ─── показать / скрыть строку поиска ─── */
-const searchBox  = document.getElementById('searchBox');
-const searchBtn  = document.getElementById('searchToggle');
-const searchInput= document.getElementById('liveSearch');
-searchBtn.onclick = ()=>{
+/* — показать / скрыть строку поиска — */
+const searchBox   = document.getElementById('searchBox');
+const searchBtn   = document.getElementById('searchToggle');
+const searchInput = document.getElementById('liveSearch');
+searchBtn.onclick = () =>{
     searchBox.classList.toggle('d-none');
     if(!searchBox.classList.contains('d-none')) searchInput.focus();
 };
 
-/* ─── живой фильтр ─── */
+/* — фильтр (по тексту + соц.категории) — */
 const catSelect = document.getElementById('catFilter');
 function liveFilter(){
     const terms  = searchInput.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    const catVal = catSelect.value;      // '' или выбранная категория
+    const catVal = catSelect.value;                           // slug выбранной категории
 
     document.querySelectorAll('#kidTable tbody tr').forEach(row=>{
-        const rowText = row.innerText.toLowerCase();     // ребёнок + родители
-        const txtOk   = terms.every(t=>rowText.includes(t));
-        const catOk   = !catVal || row.dataset.cat.includes(catVal);
-
-        row.style.display = (txtOk && catOk) ? '' : 'none';
+        const textOk = terms.every(t => row.innerText.toLowerCase().includes(t));
+        const catOk  = !catVal || row.dataset.cat.split('|').includes(catVal);
+        row.style.display = (textOk && catOk) ? '' : 'none';
     });
 }
 searchInput.addEventListener('input', liveFilter);
@@ -546,6 +557,7 @@ catSelect  .addEventListener('change', liveFilter);
 </script>
 <?php
 break;
+
 
 
 /*──────────────────────────── Заглушка по умолчанию ───────────────*/
