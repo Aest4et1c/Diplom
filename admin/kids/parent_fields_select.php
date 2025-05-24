@@ -1,4 +1,4 @@
-<?php global $parentList; ?>
+<?php  /* блок «новый / существующий» родитель */  global $parentList; ?>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <strong>Родитель</strong>
     <button type="button" class="btn-close remove-parent" aria-label="Удалить"></button>
@@ -14,7 +14,7 @@
 
 <!-- ▸ существующий -->
 <div class="parent-existing d-none">
-  <select name="parent_exists[]" class="form-select mb-3" disabled>
+  <select name="parent_exists[]" class="form-select mb-3">
       <option value="">— выберите родителя —</option>
       <?php foreach ($parentList as $pid => $pname): ?>
           <option value="<?=$pid?>"><?=htmlspecialchars($pname)?></option>

@@ -1,16 +1,8 @@
 <?php
 /**
  * Блок родителя для edit.php с предзаполненными данными.
- *
- * Доступные переменные:
- *   $par         — данные конкретного родителя
- *   $parentList  — массив [id => 'ФИО'] для <select>
- *
- * Логика:
- *   ▸ Если $par['id'] есть в $parentList → считаем «существующим»
- *     (чек-бокс включён, показан <select>).
- *   ▸ Если нет — открываем режим «новый родитель»
- *     (чек-бокс выключен, открыты текстовые поля).
+ *  $par        — массив конкретного родителя
+ *  $parentList — массив [id => 'ФИО']
  */
 $isExisting = isset($parentList[$par['id']]);
 ?>
@@ -19,7 +11,6 @@ $isExisting = isset($parentList[$par['id']]);
     <button type="button" class="btn-close remove-parent" aria-label="Удалить"></button>
 </div>
 
-<!-- идентификатор старого родителя ("" если новый блок) -->
 <input type="hidden" name="parent_old_id[]" value="<?=$par['id']?>">
 
 <div class="form-check form-switch mb-2">
@@ -27,9 +18,9 @@ $isExisting = isset($parentList[$par['id']]);
   <label class="form-check-label">Родитель уже есть</label>
 </div>
 
-<!-- ▸ выбор существующего -->
+<!-- ▸ существующий -->
 <div class="parent-existing <?=$isExisting?'':'d-none'?>">
-    <select name="parent_exists[]" class="form-select mb-3" <?= $isExisting ? '' : 'disabled' ?>>
+  <select name="parent_exists[]" class="form-select mb-3">
       <option value="">— выберите родителя —</option>
       <?php foreach ($parentList as $pid => $pname): ?>
           <option value="<?=$pid?>" <?=$pid==$par['id']?'selected':''?>>
@@ -39,7 +30,7 @@ $isExisting = isset($parentList[$par['id']]);
   </select>
 </div>
 
-<!-- ▸ ввод нового / редактирование -->
+<!-- ▸ новый -->
 <div class="parent-new <?=$isExisting?'d-none':''?>">
   <div class="row g-3 align-items-end">
     <div class="col-md-6">

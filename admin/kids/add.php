@@ -169,16 +169,18 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 addKidBtn.onclick=()=>kidList.appendChild(kidTemplate.content.cloneNode(true));
 addParentBtn.onclick=()=>parentList.appendChild(parentTemplate.content.cloneNode(true));
 
-/* toggle existing-parent combobox */
-document.addEventListener('change',e=>{
+/* переключатель «Родитель уже есть» */
+document.addEventListener('change', e=>{
   if(!e.target.classList.contains('chk-existing')) return;
-  const block=e.target.closest('.parent-block');
-  const comb  =block.querySelector('.parent-existing');
-  const sel   =comb.querySelector('select');
-  const show  =e.target.checked;
-  comb.classList.toggle('d-none',!show);
-  block.querySelector('.parent-new').classList.toggle('d-none',show);
-  sel.disabled=!show;
+
+  const block = e.target.closest('.parent-block');
+  const show  = e.target.checked;                 // true => существующий
+
+  block.querySelector('.parent-existing')
+       .classList.toggle('d-none', !show);
+
+  block.querySelector('.parent-new')
+       .classList.toggle('d-none',  show);
 });
 
 /* удаление блоков */
